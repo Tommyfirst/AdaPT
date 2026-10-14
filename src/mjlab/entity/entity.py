@@ -773,6 +773,31 @@ class Entity:
     else:
       encoder_bias = torch.empty(nworld, 0, dtype=torch.float, device=device)
 
+    # Joint-limit tensors are derived from ``model.jnt_range``, which is a
+    # single-world constant (leading dim of size 1, or none at all) in this
+    # mujoco-warp version. Downstream code indexes them per environment
+    # (e.g. ``soft_joint_pos_limits[env_ids][:, joint_ids]``), so expand the
+    # leading axis to ``nworld`` to match the per-env convention.
+    njoint = self.num_joints
+    default_joint_pos_limits = (
+      default_joint_pos_limits.reshape(njoint, 2)
+      .unsqueeze(0)
+      .expand(nworld, -1, -1)
+      .contiguous()
+    )
+    joint_pos_limits = (
+      joint_pos_limits.reshape(njoint, 2)
+      .unsqueeze(0)
+      .expand(nworld, -1, -1)
+      .contiguous()
+    )
+    soft_joint_pos_limits = (
+      soft_joint_pos_limits.reshape(njoint, 2)
+      .unsqueeze(0)
+      .expand(nworld, -1, -1)
+      .contiguous()
+    )
+
     self._data = EntityData(
       indexing=indexing,
       data=data,

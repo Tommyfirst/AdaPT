@@ -176,6 +176,18 @@ Fixed
   from its parent body. Previously only ray directions and pattern offsets were
   aligned, causing the frame position to swing with body pitch/roll
   (:issue:`775`).
+- ``EntityData`` joint-limit tensors (``default_joint_pos_limits``,
+  ``joint_pos_limits``, ``soft_joint_pos_limits``) are now expanded to the full
+  per-environment shape ``(num_envs, num_joints, 2)``. They were derived from
+  ``model.jnt_range``, which is a single-world constant, so they carried a
+  leading dimension of 1. Consumers that index by ``env_ids`` (e.g. motion
+  commands clipping reference poses, ``dr`` events, joint-limit rewards)
+  triggered a CUDA device-side assert (index out of bounds) when
+  ``num_envs > 1``.
+- ``Simulation._should_use_cuda_graph`` now reads the CUDA driver version via
+  ``warp.get_cuda_driver_version()`` instead of the removed
+  ``wp.context.runtime.driver_version`` attribute, restoring compatibility with
+  warp-lang 1.16+.
 
 Version 1.2.0 (March 6, 2026)
 -----------------------------
